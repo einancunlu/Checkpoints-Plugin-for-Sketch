@@ -1,0 +1,53 @@
+{
+	"name": "Checkpoints",
+	"description": "Create checkpoints of important stages of your artboards in the blink of an eye.",
+    "author": "Emin Inanc Unlu",
+	"homepage": "https://github.com/einancunlu/Checkpoints-for-Sketch",
+    "version": 1.1,
+	"compatibleVersion": 3.4,
+    "identifier": "com.einancunlu.sketch-plugins.checkpoints",
+    "commands": [
+        {
+            "handler": "saveCheckpoint",
+            "identifier": "saveCheckpoint",
+            "name": "Save a Checkpoint",
+			"shortcut" : "shift control option s",
+            "script": "main.cocoascript"
+        },
+        {
+            "handler": "changeMaxCheckpointCount",
+            "identifier": "changeMaxCheckpointCount",
+            "name": "Change Max Checkpoint Count",
+            "script": "main.cocoascript"
+        },
+        {
+            "handler": "feedbackByMail",
+            "identifier": "feedbackByMail",
+            "name": "Mail", 
+			"shortcut" : "",
+            "script": "main.cocoascript"
+        },
+        {
+            "handler": "feedbackByTwitter",
+            "identifier": "feedbackByTwitter",
+            "name": "Twitter", 
+			"shortcut" : "",
+            "script": "main.cocoascript"
+        }
+    ],
+    "menu": {
+		"title": "Checkpoints",
+        "items": [
+  	    	"saveCheckpoint",
+  			"changeMaxCheckpointCount",
+			"-",
+			{
+				"title": "Feedback / Contact",
+				"items": [
+					"feedbackByMail",
+					"feedbackByTwitter"
+				]
+			}
+        ]
+    }
+}

@@ -1,0 +1,115 @@
+
+/* 
+The MIT License (MIT)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+
+
+function removeLayer(layer) {
+	
+  var parent = [layer parentGroup]
+  if (parent)[parent removeLayer: layer]
+}
+
+function addLayer(name, type, parent) {
+	
+  var parent = parent ? parent : stage,
+    layer = [parent addLayerOfType: type]
+  if (name)[layer setName: name]
+  return layer
+}
+
+function addGroup(name, parent) {
+	
+  return addLayer(name, 'group', parent)
+}
+
+function isInt(value) {
+	
+  return !isNaN(value) && 
+         parseInt(Number(value)) == value && 
+         !isNaN(parseInt(value, 10))
+}
+
+function saveObjectToUserDefaults(object, key) {
+	
+	var configs  = [NSMutableDictionary dictionary]
+	[configs setObject: object forKey: key]
+	[defaults registerDefaults: configs]
+	[defaults synchronize]
+}
+
+function setLayerSizeEqualToReferenceLayer(layer, referenceLayer) {
+	
+	var rect = [referenceLayer absoluteRect]
+	[[layer absoluteRect] setX: [rect x]]
+	[[layer absoluteRect] setY: [rect y]]
+	[[layer absoluteRect] setWidth: [rect width]]
+	[[layer absoluteRect] setHeight: [rect height]]
+}
+
+function getSketchVersionNumber() {
+	
+	const version = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleShortVersionString"]
+	var versionNumber = version.stringByReplacingOccurrencesOfString_withString(".", "") + ""
+	while(versionNumber.length != 3) {
+		versionNumber += "0"
+	}
+	return parseInt(versionNumber)
+}
+
+function checkPluginUpdate() {
+	
+	var manifestFilePath = scriptFolder + "/manifest.json"
+	var manifestJSON = getJSONFromFile(manifestFilePath)
+	var isThereNewUpdate = false
+	try {
+		var response = getJSONFromURL('https://raw.githubusercontent.com/einancunlu/Checkpoints-for-Sketch/master/Checkpoints.sketchplugin/Contents/Sketch/manifest.json')
+		if (response && response.version) {
+			if (response.version.toString() != manifestJSON.version.toString()) {
+				isThereNewUpdate = true
+			}
+		}		
+	} catch (e) {
+		log(e)
+		return false
+	}
+	return isThereNewUpdate
+}
+
+
+//--------------------------------------
+// JSON
+//--------------------------------------
+
+
+function getJSONFromFile(filePath) {
+	
+	var data = [NSData dataWithContentsOfFile: filePath]
+	return [NSJSONSerialization JSONObjectWithData: data options: 0 error: nil]
+}
+
+function getJSONFromURL(url) {
+	
+	var request = [NSURLRequest requestWithURL: [NSURL URLWithString:url]],
+		response = [NSURLConnection sendSynchronousRequest: request returningResponse: nil error: nil],
+		responseObj = [NSJSONSerialization JSONObjectWithData: response options: nil error: nil]
+	return responseObj
+}

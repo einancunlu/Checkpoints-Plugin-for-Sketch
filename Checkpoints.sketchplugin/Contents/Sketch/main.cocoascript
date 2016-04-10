@@ -1,0 +1,347 @@
+
+
+//
+//  Created by Emin İnanç Ünlü
+//
+
+
+/* 
+The MIT License (MIT)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+
+
+@import 'utility.cocoascript'
+
+
+//--------------------------------------
+// Global Variables
+//--------------------------------------
+
+
+var doc,
+	command,
+	selection,
+	scriptPath,
+	scriptFolder,
+	app = [NSApplication sharedApplication],
+	defaults = [NSUserDefaults standardUserDefaults],
+
+	kPluginDomain = "com.einancunlu.sketch-plugins.checkpoints",
+ 
+	kLastUpdateCheckDayKey = kPluginDomain + ".lastUpdateCheckDayKey"
+	kCheckpointGroupName = "Checkpoints",
+	kCheckpointGroupKey = kPluginDomain + "checkpointGroup",
+	kCheckpointNameKey = kPluginDomain + "checkpointName",
+	kCheckpointGroupBGLayerName = "BG",
+	kMaxCheckpointCountKey = kPluginDomain + "maxCheckpointCount",
+	maxCheckpointCount = 3
+
+
+//--------------------------------------
+// Menu Commands
+//--------------------------------------
+
+
+function saveCheckpoint(context) {
+	
+	initCommand(context)
+	maxCheckpointCount = [defaults objectForKey: kMaxCheckpointCountKey] || maxCheckpointCount
+	
+	// Create checkpoitns for all selected layers
+	selection = context.selection
+	if ([selection count] == 0) {
+		[doc showMessage: "Select some layer(s) or artboard(s) first."]
+		return
+	} else {
+		var successfulOperationCount = 0
+	    for (var i = 0; i < [selection count]; i++) {
+	    	var selectedLayer = selection.objectAtIndex(i)
+			var artboard = artboardOfLayer(selectedLayer)
+			if (artboard) {
+				var checkpointGroup = checkpointGroupForArtboard(artboard)
+				newCheckpoint(checkpointGroup, artboard)
+				checkpointGroup.setIsVisible(false)
+				successfulOperationCount++
+			}
+		}
+	}
+	
+	// Give notification
+	var failedOperationCount = [selection count] - successfulOperationCount
+	if (failedOperationCount > 0) {
+		[doc showMessage: "Failed to create checkpoints for: " + failedOperationCount + " artboards. For others, checkpoints are created succesfully."]
+	} else {
+		if (successfulOperationCount > 1) {
+			[doc showMessage: "Checkpoints are created successfully."]
+		}  else {
+			[doc showMessage: "Checkpoint is created successfully."]
+		}
+	}
+}
+
+function changeMaxCheckpointCount(context) {
+	
+	initCommand(context)
+	maxCheckpointCount = [defaults objectForKey: kMaxCheckpointCountKey] || maxCheckpointCount
+	
+	var description = "Enter the max Checkpoint Count"
+	var newCount = [doc askForUserInput: description initialValue: maxCheckpointCount]
+	if (newCount) {
+		if (isInt(newCount)) {
+			saveObjectToUserDefaults(newCount, kMaxCheckpointCountKey)
+			maxCheckpointCount = newCount
+			[doc showMessage: "New max checkpoint count: " + maxCheckpointCount]
+		} else {
+			[doc showMessage: "Input should be an integer, please enter again."]
+		}
+	} else {
+		[doc showMessage: "No input was taken."]
+	}
+}
+
+function feedbackByMail(context) {
+	
+	initCommand(context)
+	
+	var encodedSubject = [NSString stringWithFormat:@"SUBJECT=%@", [@"Feedback on Checkpoints Plugin" stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]],
+	encodedBody = [NSString stringWithFormat:@"BODY=%@", [@"" stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]],
+	encodedTo = [[NSString stringWithFormat:@"apps.einancunlu", @"@gma", @"il.com"] stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding],
+	encodedURLString = [NSString stringWithFormat:@"mailto:%@?%@&%@", encodedTo, encodedSubject, encodedBody],
+	mailtoURL = [NSURL URLWithString:encodedURLString]
+	[[NSWorkspace sharedWorkspace] openURL:mailtoURL] 
+}
+
+function feedbackByTwitter(context) {
+	
+	initCommand(context)
+	
+	var urlString = "https://twitter.com/einancunlu"
+	[[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString: urlString]]
+}
+
+function initCommand(context) {
+	
+	doc = context.document
+	command = context.command 
+	selection = context.selection
+	scriptPath = context.scriptPath
+	scriptFolder = [scriptPath stringByDeletingLastPathComponent]
+	
+	if (isTodayNewDay() && checkPluginUpdate()) {
+		app.displayDialog_withTitle("Please redownload the plugin to install the new version.", "There is a new version of the plugin!")
+	}
+}
+
+
+//--------------------------------------
+// Helper Functions
+//--------------------------------------
+
+
+function checkpointGroupForArtboard(artboard) {
+	
+	// Find parent group of checkpoints (checkpointGroup)
+	var checkpointGroup
+    var layers = artboard.layers()
+    for (var i = 0; i < [layers count]; i++) {
+    	var layer = layers.objectAtIndex(i)
+		if ([command valueForKey:kCheckpointGroupKey onLayer: layer]) {
+			checkpointGroup = layer
+			// Move to front
+			checkpointGroup.removeFromParent()
+			[artboard insertLayers: [checkpointGroup] atIndex: [layers count]]
+		}
+	}
+	if (!checkpointGroup) {
+		checkpointGroup = createCheckpointGroup(artboard)
+	} 
+	return checkpointGroup
+}
+
+function newCheckpoint(checkpointGroup, artboard) {
+
+	// Find layers to be saved
+	var layers = []
+	var artboardLayers = artboard.layers()
+	for (var i = 0; i < [artboardLayers count]; i++) {
+		var layer = artboardLayers.objectAtIndex(i)
+		if (![command valueForKey:kCheckpointGroupKey onLayer:layer]) {
+			layers.push(layer.copy())
+		}
+	}
+	
+	// Prepare the name of the checkpoint group
+	var checkpointName = [command valueForKey:kCheckpointNameKey onLayer:checkpointGroup]
+	if (checkpointName) {
+		checkpointName++
+		[command setValue:checkpointName forKey:kCheckpointNameKey onLayer:checkpointGroup]
+		checkpointName = checkpointName + ""
+	} else {
+		[command setValue:1 forKey:kCheckpointNameKey onLayer:checkpointGroup]
+		checkpointName = "1"
+	}
+	checkpointName = addDateToName(checkpointName)
+	
+	prepareCheckpointsForUpdate(checkpointGroup)
+	
+	// Create and add the new checkpoint group
+	var checkpoint = addGroup(checkpointName, checkpointGroup)
+	var BGLayer = createBGLayer(checkpoint, artboard)
+	checkpoint.addLayers(layers)
+	cleanAllStylesAndSymbols(checkpoint)
+	if (getSketchVersionNumber() >= 350) {
+		checkpoint.resizeToFitChildrenWithOption(1) 
+	} else {
+		checkpoint.resizeRoot(true) 
+	}
+}
+
+function prepareCheckpointsForUpdate(checkpointGroup) {
+
+	// Hide all checkpoint groups and determine the extras to be deleted
+	var checkpoints = checkpointGroup.layers()
+	var checkpointCount = checkpoints.count()
+	var extraCheckpointNumber = checkpointCount - maxCheckpointCount + 1
+	var extraCheckpoints = []
+	for (var i = 0; i < checkpointCount; i++) {
+		var checkpoint = checkpoints.objectAtIndex(i)
+		if (i < extraCheckpointNumber) {
+			extraCheckpoints.push(checkpoint)		
+		} else {
+			checkpoint.setIsVisible(false)
+		}
+	}
+
+	// Delete the extras
+	for (var i = 0; i < extraCheckpoints.length; i++) {
+		var checkpoint = extraCheckpoints[i]
+		[checkpoint removeFromParent]
+	}
+}
+
+function createCheckpointGroup(artboard) {
+
+	var checkpointGroup = addGroup(kCheckpointGroupName, artboard)
+	[command setValue:true forKey:kCheckpointGroupKey onLayer:checkpointGroup]
+	return checkpointGroup
+}
+
+function createCheckpoint(checkpointGroup) {
+	
+	var BGLayer = createBGLayer(checkpointGroup, artboard)
+	checkpointGroup.addLayers([BGLayer])
+	if (getSketchVersionNumber() >= 350) {
+		checkpointGroup.resizeToFitChildrenWithOption(1) 
+	} else {
+		checkpointGroup.resizeRoot(true) 
+	}
+	return checkpointGroup
+}
+
+function createBGLayer(parent, referenceArtboard) {
+	
+	var BGLayer = [parent addLayerOfType: 'rectangle']
+	[BGLayer setName: kCheckpointGroupBGLayerName]
+	
+	// Set size
+	setLayerSizeEqualToReferenceLayer(BGLayer, referenceArtboard)
+	
+	// Set Style
+	var style = BGLayer.style()
+	[[style fills] addNewStylePart]
+	[[style fill] setFillType: 0] 
+	var color = [referenceArtboard backgroundColor]
+	[[style fill] setColor: color]
+	
+	return BGLayer
+}
+
+function cleanAllStylesAndSymbols(container) {
+	
+    var children = container.children()
+    for (var i = 0; i < [children count]; i++) {
+    	var layer = children[i]
+		if (getSketchVersionNumber() >= 370) {
+			if ([layer class] === MSSymbolInstance) {
+				detachSymbolInstance(layer)
+			} else if (layer.style != undefined) {
+				layer.style().setSharedObjectID(null)
+			}
+		} else {
+			if ([layer class] === MSLayerGroup) {
+				layer.setSharedObjectID(null)
+			} else if (layer.style != undefined) {
+				layer.style().setSharedObjectID(null)
+			}
+		}
+	}
+	doc.reloadInspector()
+} 
+ 
+function detachSymbolInstance(layer) {
+	
+	var detachedGroup = layer.detachByReplacingWithGroup()
+	var children = detachedGroup.children()
+    for (var i = 0; i < [children count]; i++) {
+    	var childLayer = children.objectAtIndex(i)
+		cleanAllStylesAndSymbols(childLayer)
+	}
+}
+
+function addDateToName(name) {
+	
+	var formatter = [[NSDateFormatter alloc] init]
+	[formatter setDateStyle: NSDateFormatterShortStyle]
+	var now = [NSDate date]
+	return name + " - " + [formatter stringFromDate: now]
+}
+
+function artboardOfLayer(layer) {
+	
+	if ([layer class] === MSArtboardGroup) return layer
+	var parent = [layer parentGroup]
+	if (parent) {
+		if ([parent class] === MSArtboardGroup) {
+			return parent
+		} else {
+			return artboardOfLayer(parent)
+		}
+	} else {
+		return nil
+	}
+}
+
+function isTodayNewDay() {
+	
+	var lastUpdateCheckDay = [defaults objectForKey: kLastUpdateCheckDayKey]
+	
+	var formatter = [[NSDateFormatter alloc] init]
+	[formatter setDateStyle: NSDateFormatterShortStyle]
+	var today = [formatter stringFromDate: [NSDate date]]
+	saveObjectToUserDefaults(today, kLastUpdateCheckDayKey)
+	
+	if (lastUpdateCheckDay) {
+		return lastUpdateCheckDay != today
+	} else {
+		return true
+	}
+}
+
