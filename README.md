@@ -1,4 +1,5 @@
 # Checkpoints for Sketch
+Save important stages of your artboards in the blink of an eye, and then, move fast and break things.
 
 Check out [my Medium post](https://medium.com/@einancunlu/checkpoints-plugin-for-sketch-482c135f0186#.i2lawplk5) for the details.
 

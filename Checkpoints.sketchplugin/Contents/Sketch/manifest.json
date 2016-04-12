@@ -1,8 +1,8 @@
 {
 	"name": "Checkpoints",
-	"description": "Create checkpoints of important stages of your artboards in the blink of an eye.",
+	"description": "Save important stages of your artboards in the blink of an eye, and then, move fast and break things.",
     "author": "Emin Inanc Unlu",
-	"homepage": "https://github.com/einancunlu/Checkpoints-for-Sketch",
+	"homepage": "https://github.com/einancunlu/Checkpoints-Plugin-for-Sketch",
     "version": 1.1,
 	"compatibleVersion": 3.4,
     "identifier": "com.einancunlu.sketch-plugins.checkpoints",

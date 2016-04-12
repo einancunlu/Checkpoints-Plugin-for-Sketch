@@ -81,7 +81,7 @@ function checkPluginUpdate() {
 	var manifestJSON = getJSONFromFile(manifestFilePath)
 	var isThereNewUpdate = false
 	try {
-		var response = getJSONFromURL('https://raw.githubusercontent.com/einancunlu/Checkpoints-for-Sketch/master/Checkpoints.sketchplugin/Contents/Sketch/manifest.json')
+		var response = getJSONFromURL('https://raw.githubusercontent.com/einancunlu/Checkpoints-Plugin-for-Sketch/master/Checkpoints.sketchplugin/Contents/Sketch/manifest.json')
 		if (response && response.version) {
 			if (response.version.toString() != manifestJSON.version.toString()) {
 				isThereNewUpdate = true
