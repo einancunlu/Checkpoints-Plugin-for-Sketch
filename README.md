@@ -1,6 +1,6 @@
 # Checkpoints for Sketch
 
-Check out [my Medium post](https://medium.com/@einancunlu/disconnect-for-sketch-sketch-plugins-should-look-great-too-5668276a4014#.r7stxhjm7) for the details.
+Check out [my Medium post](https://medium.com/@einancunlu/checkpoints-plugin-for-sketch-482c135f0186#.i2lawplk5) for the details.
 
 # Changelog
 
