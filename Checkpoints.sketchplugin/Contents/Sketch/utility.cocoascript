@@ -24,21 +24,34 @@ SOFTWARE.
 
 function removeLayer(layer) {
 	
-  var parent = [layer parentGroup]
-  if (parent)[parent removeLayer: layer]
+	var parent = [layer parentGroup]
+	if (parent)[parent removeLayer: layer]
 }
 
 function addLayer(name, type, parent) {
 	
-  var parent = parent ? parent : stage,
-    layer = [parent addLayerOfType: type]
-  if (name)[layer setName: name]
-  return layer
+	var layer
+	switch(type) {
+		case "rectangle":
+			var rectangleShape = MSRectangleShape.alloc().init()
+			rectangleShape.frame = MSRect.rectWithRect(NSMakeRect(0, 0, 50, 50)) 
+			layer = MSShapeGroup.shapeWithPath(rectangleShape)
+			parent.addLayers([layer]) 
+			break 
+		case "group":
+			layer = [[MSLayerGroup alloc] init]
+			[parent addLayers:[layer]]
+			break
+		default: 
+			break
+	}
+	if (name) [layer setName: name]
+	return layer
 }
 
 function addGroup(name, parent) {
 	
-  return addLayer(name, 'group', parent)
+	return addLayer(name, 'group', parent)
 }
 
 function isInt(value) {

@@ -258,22 +258,24 @@ function createCheckpoint(checkpointGroup) {
 
 function createBGLayer(parent, referenceArtboard) {
 	
-	var BGLayer = [parent addLayerOfType: 'rectangle']
-	[BGLayer setName: kCheckpointGroupBGLayerName]
+	var BGLayer = addLayer(kCheckpointGroupBGLayerName, 'rectangle', parent)
 	
 	// Set size
 	setLayerSizeEqualToReferenceLayer(BGLayer, referenceArtboard)
 	
-	// Set Style
-	var style = BGLayer.style()
-	[[style fills] addNewStylePart]
-	[[style fill] setFillType: 0] 
-	var color = [referenceArtboard backgroundColor]
-	[[style fill] setColor: color]
+	// Set Style 
+	var fill
+	if (getSketchVersionNumber() >= 380) { 
+		fill = BGLayer.style().addStylePartOfType(0)
+	} else {
+		var fills = BGLayer.style().fills()
+		fill = [fills addNewStylePart]
+	}
+	fill.color = [referenceArtboard backgroundColor]
 	
-	return BGLayer
+	return BGLayer 
 }
-
+ 
 function cleanAllStylesAndSymbols(container) {
 	
     var children = container.children()
