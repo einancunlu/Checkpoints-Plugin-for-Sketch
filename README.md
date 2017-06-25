@@ -4,6 +4,9 @@ Check out my [Medium post](https://medium.com/@einancunlu/checkpoints-plugin-for
 
 # Changelog
 
+## v1.3
+- Sketch 4.5 fix.
+
 ## v1.2
 - Sketch 3.8 fix.
 
