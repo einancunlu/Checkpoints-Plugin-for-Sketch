@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle"  xmlns:dc="http://purl.org/dc/elements/1.1/">
   <channel>
-    <title>Checkpoints</title>
-    <link>https://github.com/einancunlu/Checkpoints-Plugin-for-Sketch</link>
+    <title>Checkpoints Plugin</title>
+    <link>http://sparkle-project.org/files/sparkletestcast.xml</link>
     <description>Save important stages of your artboards in the blink of an eye, and then, move fast and break things.</description>
     <language>en</language>
       <item>
