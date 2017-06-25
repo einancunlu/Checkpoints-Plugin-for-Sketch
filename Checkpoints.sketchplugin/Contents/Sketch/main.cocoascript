@@ -145,7 +145,7 @@ function initCommand(context) {
 	scriptPath = context.scriptPath
 	scriptFolder = [scriptPath stringByDeletingLastPathComponent]
 	
-	if (isTodayNewDay() && checkPluginUpdate()) {
+	if (getSketchVersionNumber() < 450 && isTodayNewDay() && checkPluginUpdate()) {
 		app.displayDialog_withTitle("Please redownload the plugin to install the new version.", "There is a new version of the plugin!")
 	}
 }
