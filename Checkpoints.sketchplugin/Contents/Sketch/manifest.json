@@ -4,7 +4,7 @@
     "author": "Emin Inanc Unlu",
 	"homepage": "https://github.com/einancunlu/Checkpoints-Plugin-for-Sketch",
     "version": 1.2,
-	"appcast" : "https://raw.githubusercontent.com/einancunlu/Checkpoints-Plugin-for-Sketch/master/appcast",
+	"appcast" : "https://raw.githubusercontent.com/einancunlu/Checkpoints-Plugin-for-Sketch/master/Checkpoints.sketchplugin/Contents/Sketch/appcast",
 	"compatibleVersion": 3.5,
     "identifier": "com.einancunlu.sketch-plugins.checkpoints",
     "commands": [
